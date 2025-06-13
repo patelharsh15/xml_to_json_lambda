@@ -1,0 +1,43 @@
+# xml-to-json-lambda/serverless.yml
+service: xml-to-json-converter
+
+frameworkVersion: '>=4'
+
+provider:
+  name: aws
+  runtime: python3.10
+  stage: dev
+  region: us-east-1
+  architecture: arm64
+  memorySize: 128
+  timeout: 10
+  deploymentBucket:
+    name: comtech-coop-data
+  environment:
+    LOG_LEVEL: INFO
+
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "logs:CreateLogGroup"
+        - "logs:CreateLogStream"
+        - "logs:PutLogEvents"
+      Resource: "arn:aws:logs:${aws:region}:${aws:accountId}:log-group:/aws/lambda/${self:service}-${sls:stage}-*:*"
+
+functions:
+  xmlToJsonConverter:
+    handler: handler.convert_xml_to_json
+    url:
+      cors: true
+      authorizer: none 
+
+package:
+  individually: true
+  excludeDevDependencies: true
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true

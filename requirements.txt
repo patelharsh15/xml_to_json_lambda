@@ -1,0 +1,2 @@
+# xml-to-json-lambda/requirements.txt
+xmltodict==0.13.0
