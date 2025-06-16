@@ -22,15 +22,9 @@ terraform {
     }
   }
 
-  # Configures the remote backend for storing Terraform state.
-  # This is a critical best practice for team collaboration and state durability.
-  # Replace 'your-terraform-state-bucket' and 'your-dynamodb-lock-table' with actual resources.
-  # These resources should ideally be created manually or by a separate, foundational Terraform config.
   backend "s3" {
-    bucket         = "your-terraform-state-bucket" # REQUIRED: Change to your S3 bucket name
-    key            = "xml-to-json-converter/terraform.tfstate" # Path to the state file within the bucket
-    region         = "us-east-1" # REQUIRED: Should match your deployment region
-    dynamodb_table = "your-dynamodb-lock-table" # REQUIRED: Change to your DynamoDB table for state locking
-    encrypt        = true                      # Encrypts the state file in S3
+    bucket         = "comtech-coop-data"                  
+    key            = "xml-to-json-converter/terraform.tfstate"   
+    region         = "us-east-1"
   }
 }
