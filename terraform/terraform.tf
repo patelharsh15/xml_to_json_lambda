@@ -21,10 +21,4 @@ terraform {
       version = "~> 3.0" # Required for the null_resource to run local commands
     }
   }
-
-  backend "s3" {
-    bucket         = "comtech-coop-data"                  
-    key            = "xml-to-json-converter/terraform.tfstate"   
-    region         = "us-east-1"
-  }
 }

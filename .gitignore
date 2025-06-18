@@ -20,6 +20,7 @@ package.json
 
 # Serverless directories
 .serverless
+serverless
 .terraform
 .venv
 __pycache__

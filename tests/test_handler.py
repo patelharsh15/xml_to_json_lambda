@@ -2,7 +2,7 @@
 import pytest
 import json
 from unittest.mock import MagicMock
-from handler import convert_xml_to_json
+from xml_to_json.handler import convert_xml_to_json
 
 
 # Mock event structure for a Lambda Function URL POST request
