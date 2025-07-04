@@ -32,7 +32,8 @@ resource "aws_lambda_function" "xml_to_json_converter" {
   environment {
     variables = {
       LOG_LEVEL = var.log_level,
-      API_KEY_SECRET_NAME = aws_secretsmanager_secret.api_key_secret.name
+      API_KEY_SECRET_NAME = aws_secretsmanager_secret.api_key_secret.name,
+      DYNAMODB_TABLE_NAME = aws_dynamodb_table.data_store.name
     }
   }
 
