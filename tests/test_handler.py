@@ -1,5 +1,4 @@
 # xml-to-json-lambda/tests/test_handler.py
-import pytest
 import json
 from unittest.mock import MagicMock
 from xml_to_json.handler import convert_xml_to_json

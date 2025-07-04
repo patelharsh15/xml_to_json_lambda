@@ -5,17 +5,34 @@
 # The main Lambda function definition.
 resource "aws_lambda_function" "xml_to_json_converter" {
   function_name    = var.service_name
-  handler          = "handler.convert_xml_to_json" # Correct handler: filename.function_name
+  handler          = "handler.convert_xml_to_json"
   runtime          = var.lambda_runtime
   memory_size      = var.lambda_memory_size
   timeout          = var.lambda_timeout
   role             = aws_iam_role.lambda_exec_role.arn # From iam.tf
-  filename         = archive_file.lambda_zip.output_path # From build.tf
-  source_code_hash = archive_file.lambda_zip.output_base64sha256
 
+  # This points to the zip file that will be created during 'apply'.
+  # Terraform accepts that this file might not exist during 'plan'.
+  filename = "${path.module}/${var.service_name}.zip"
+
+  # THIS IS THE KEY FIX:
+  # The hash is now based on the trigger from the build resource.
+  # When the source code changes, the 'build_lambda_package' resource is marked for replacement.
+  # This change in its 'source_code_hash' trigger forces the aws_lambda_function to update,
+  # but only AFTER the build resource has finished its 'apply' step (the provisioner).
+  source_code_hash = null_resource.build_lambda_package.triggers.source_code_hash
+
+  # Note: The 'depends_on' is no longer strictly necessary because the reference to
+  # null_resource.build_lambda_package.triggers.source_code_hash creates an *implicit* dependency.
+  # However, keeping it can make the intent clearer.
+  depends_on = [
+    null_resource.build_lambda_package
+  ]
+  
   environment {
     variables = {
-      LOG_LEVEL = var.log_level
+      LOG_LEVEL = var.log_level,
+      API_KEY_SECRET_NAME = aws_secretsmanager_secret.api_key_secret.name
     }
   }
 
@@ -24,23 +41,4 @@ resource "aws_lambda_function" "xml_to_json_converter" {
   }
 }
 
-# Creates a direct HTTP endpoint for the Lambda function.
-resource "aws_lambda_function_url" "converter_url" {
-  function_name      = aws_lambda_function.xml_to_json_converter.function_name
-  authorization_type = "NONE"
 
-  cors {
-    allow_methods = ["POST"]
-    allow_origins = ["*"]
-    allow_headers = ["Content-Type"]
-  }
-}
-
-# Grants public access to invoke the Lambda Function URL.
-resource "aws_lambda_permission" "allow_url_invocation" {
-  statement_id           = "FunctionURLInvokePermission"
-  action                 = "lambda:InvokeFunctionUrl"
-  function_name          = aws_lambda_function.xml_to_json_converter.function_name
-  principal              = "*"
-  function_url_auth_type = "NONE"
-}

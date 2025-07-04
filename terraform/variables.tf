@@ -24,6 +24,15 @@ variable "lambda_architecture" {
   default     = "arm64"
 }
 
+variable "tags" {
+  description = "A map of tags to assign to all created resources for tracking and cost allocation."
+  type        = map(string)
+  default = {
+    Project   = "XML to JSON Converter"
+    ManagedBy = "Coop Project"
+  }
+}
+
 variable "lambda_memory_size" {
   description = <<-DESC
     (Optional) The amount of memory (in MB) that the Lambda function has available.
@@ -54,7 +63,7 @@ variable "lambda_timeout" {
     Default: `10`
   DESC
   type        = number
-  default     = 10
+  default     = 30
 }
 
 variable "log_level" {

@@ -2,20 +2,18 @@
 import json
 import logging
 import os
-from xml.parsers.expat import ExpatError  # Specific exception for malformed XML
+from xml.parsers.expat import ExpatError
 import xmltodict
 
 # --- Constants ---
-# Centralize headers to avoid repetition and make them easy to update.
 CORS_HEADERS = {
     "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "POST",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Origin": "*",  # Be more specific in production!
+    "Access-Control-Allow-Methods": "POST, OPTIONS",  # OPTIONS is needed for browser pre-flight requests
+    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
 }
 
 # --- Configuration ---
-# Configure logging once at the top level.
 logger = logging.getLogger()
 logger.setLevel(os.environ.get("LOG_LEVEL", "INFO").upper())
 
@@ -23,17 +21,8 @@ logger.setLevel(os.environ.get("LOG_LEVEL", "INFO").upper())
 # --- Helper Function ---
 def create_response(status_code: int, body: dict or str) -> dict:
     """
-    Creates a standard Lambda Function URL response object.
-
-    Args:
-        status_code: The HTTP status code for the response.
-        body: The response body, as a dictionary (will be converted to JSON) or a string.
-
-    Returns:
-        A dictionary formatted for an AWS Lambda Function URL response.
+    Creates a standard API Gateway proxy response object.
     """
-    # If the body is a dictionary, convert it to a JSON string.
-    # Otherwise, assume it's already a formatted string (like our successful XML->JSON output).
     if isinstance(body, dict):
         body = json.dumps(body)
 
@@ -47,21 +36,29 @@ def create_response(status_code: int, body: dict or str) -> dict:
 # --- Main Handler ---
 def convert_xml_to_json(event: dict, context: object) -> dict:
     """
-    AWS Lambda handler to convert XML payload to JSON, invoked via Lambda Function URL.
+    AWS Lambda handler to convert XML to JSON, invoked via API Gateway.
     """
     try:
-        logger.info(
-            "Received event"
-        )  # Avoid logging the full event body in production for PII reasons
+        # For API Gateway, you might get a pre-flight OPTIONS request from browsers
+        # This handles the CORS pre-flight check gracefully.
+        if event.get("httpMethod") == "OPTIONS":
+            return create_response(204, "")
+
+        logger.info("Received event")
 
         # 1. Input Validation (Guard Clauses)
-        if event["requestContext"]["http"]["method"] != "POST":
+        # CHANGED: Access 'httpMethod' directly from the event root.
+        if event.get("httpMethod") != "POST":
             logger.warning("Unsupported HTTP method received.")
             return create_response(
                 405, {"error": "Method Not Allowed. Only POST is supported."}
             )
 
-        content_type = event.get("headers", {}).get("content-type", "").lower()
+        # CHANGED: Headers are top-level and keys can be cased differently.
+        # It's safer to normalize them to lowercase.
+        headers = {k.lower(): v for k, v in event.get("headers", {}).items()}
+        content_type = headers.get("content-type", "").lower()
+
         if "application/xml" not in content_type and "text/xml" not in content_type:
             logger.warning(f"Unsupported Content-Type: {content_type}")
             return create_response(
@@ -81,18 +78,17 @@ def convert_xml_to_json(event: dict, context: object) -> dict:
         # 2. Core Logic: Perform XML to JSON Conversion
         logger.info("Attempting to convert XML to JSON.")
         parsed_dict = xmltodict.parse(xml_data)
-        json_output = json.dumps(parsed_dict, indent=2)  # indent for readability
+        json_output = json.dumps(parsed_dict, indent=2)
         logger.info("Successfully converted XML to JSON.")
 
         # 3. Return Success Response
         return create_response(200, json_output)
 
-    # 4. Specific and Generic Exception Handling
+    # 4. Exception Handling (remains the same)
     except (ExpatError, xmltodict.ParsingInterrupted) as e:
         error_msg = f"Invalid XML format: {e}"
         logger.error(error_msg)
         return create_response(400, {"error": "Invalid XML format provided."})
     except Exception as e:
-        # Catch any other unexpected errors
         logger.error(f"An unexpected error occurred: {e}", exc_info=True)
         return create_response(500, {"error": "An internal server error occurred."})

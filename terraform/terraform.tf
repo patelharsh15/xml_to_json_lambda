@@ -12,10 +12,6 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0" # Use a compatible major version for AWS provider
     }
-    archive = {
-      source  = "hashicorp/archive"
-      version = "~> 2.0" # Required for zipping the Lambda deployment package
-    }
     null = {
       source  = "hashicorp/null"
       version = "~> 3.0" # Required for the null_resource to run local commands

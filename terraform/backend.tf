@@ -6,7 +6,7 @@
 terraform {
   backend "s3" {
     bucket         = "comtech-coop-data"
-    key            = "xml-to-json-converter/terraform.tfstate"
+    key            = "xml-to-json-converter/terraform_1.tfstate"
     region         = "us-east-1"
   }
 }

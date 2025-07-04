@@ -12,7 +12,13 @@ output "lambda_function_name" {
   value       = aws_lambda_function.xml_to_json_converter.function_name
 }
 
-output "lambda_function_url" {
-  description = "The public URL endpoint for invoking the Lambda function."
-  value       = aws_lambda_function_url.converter_url.function_url
+# output "lambda_function_url" {
+#   description = "The public URL endpoint for invoking the Lambda function."
+#   value       = aws_lambda_function_url.converter_url.function_url
+# }
+
+# ADD the new output for the API Gateway endpoint
+output "api_gateway_endpoint" {
+  description = "The invoke URL for the API Gateway endpoint"
+  value       = "${aws_apigatewayv2_api.xml_to_json_converter.api_endpoint}/convert"
 }

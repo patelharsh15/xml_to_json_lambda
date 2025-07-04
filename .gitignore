@@ -24,3 +24,4 @@ serverless
 .terraform
 .venv
 __pycache__
+.terraform
