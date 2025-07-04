@@ -1,8 +1,7 @@
 # Distribution / packaging
 .Python
 env/
-build/
-terraform/build
+*build/
 develop-eggs/
 dist/
 downloads/
@@ -22,7 +21,7 @@ package.json
 # Serverless & terraform directories
 .serverless
 serverless
-.terraform
+.terraform*
 .venv
 __pycache__
-.terraform
+*.zip
