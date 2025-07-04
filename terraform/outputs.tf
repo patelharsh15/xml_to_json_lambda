@@ -17,8 +17,10 @@ output "lambda_function_name" {
 #   value       = aws_lambda_function_url.converter_url.function_url
 # }
 
-# ADD the new output for the API Gateway endpoint
+# outputs.tf - CORRECT for REST API
+
 output "api_gateway_endpoint" {
-  description = "The invoke URL for the API Gateway endpoint"
-  value       = "${aws_apigatewayv2_api.xml_to_json_converter.api_endpoint}/convert"
+  description = "The full invoke URL for the /convert endpoint."
+  # Use the 'invoke_url' from the stage and append the resource path
+  value       = "${aws_api_gateway_stage.prod.invoke_url}/${aws_api_gateway_resource.convert.path_part}"
 }
